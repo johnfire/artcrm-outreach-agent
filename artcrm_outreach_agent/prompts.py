@@ -70,6 +70,7 @@ def draft_email_prompt(
         f"- Express genuine interest in their specific space and program\n"
         f"- Propose one concrete next step (visit, call, or sending portfolio)\n"
         f"- Be short — 4 to 6 sentences in the body, no fluff\n"
+        f"- Sign off with your name and website: {mission.website}\n"
         f'- End with this opt-out line (verbatim): "{opt_out}"\n\n'
         f"Return a JSON object with:\n"
         f"- subject: email subject line\n"
