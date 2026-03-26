@@ -2,8 +2,8 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, END
 
 from .protocols import (
-    AgentMission, LanguageModel, ReadyContactFetcher,
-    ComplianceChecker, ApprovalQueuer, RunStarter, RunFinisher,
+    AgentMission, LanguageModel, ReadyContactFetcher, InteractionFetcher,
+    ComplianceChecker, ApprovalQueuer, PageFetcher, RunStarter, RunFinisher,
 )
 from .state import OutreachState
 from .prompts import draft_email_prompt
@@ -13,6 +13,8 @@ from ._utils import parse_json_response
 def create_outreach_agent(
     llm: LanguageModel,
     fetch_ready_contacts: ReadyContactFetcher,
+    fetch_interactions: InteractionFetcher,
+    fetch_page: PageFetcher,
     check_compliance: ComplianceChecker,
     queue_for_approval: ApprovalQueuer,
     start_run: RunStarter,
@@ -23,7 +25,8 @@ def create_outreach_agent(
     Build and return a compiled LangGraph outreach agent.
 
     The agent fetches contacts with status='cold', checks GDPR compliance for each,
-    drafts a first-contact email using the LLM, and queues it for human approval.
+    fetches the venue's website and interaction history, drafts a personalized
+    first-contact email using the LLM, and queues it for human approval.
     Nothing is sent until a human approves via the UI.
 
     Usage:
@@ -63,22 +66,35 @@ def create_outreach_agent(
             try:
                 allowed = check_compliance(contact_id)
             except Exception as e:
-                drafts.append({
-                    "contact_id": contact_id,
-                    "blocked_reason": f"compliance check error: {e}",
-                })
+                drafts.append({"contact_id": contact_id, "blocked_reason": f"compliance check error: {e}"})
                 continue
 
             if not allowed:
-                drafts.append({
-                    "contact_id": contact_id,
-                    "blocked_reason": "opt-out or erasure flag set",
-                })
+                drafts.append({"contact_id": contact_id, "blocked_reason": "opt-out or erasure flag set"})
                 continue
+
+            # Fetch interaction history
+            try:
+                interactions = fetch_interactions(contact_id)
+            except Exception:
+                interactions = []
+
+            # Fetch venue website
+            website_content = ""
+            website = contact.get("website", "")
+            if website:
+                try:
+                    website_content = fetch_page(website)
+                except Exception:
+                    pass
 
             # Draft the email
             language = contact.get("preferred_language") or mission.language_default
-            system, user = draft_email_prompt(mission, contact, language)
+            system, user = draft_email_prompt(
+                mission, contact, language,
+                interactions=interactions,
+                website_content=website_content,
+            )
             try:
                 response = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
                 result = parse_json_response(response.content)
@@ -88,10 +104,7 @@ def create_outreach_agent(
                     "body": result.get("body", ""),
                 })
             except Exception as e:
-                drafts.append({
-                    "contact_id": contact_id,
-                    "blocked_reason": f"draft error: {e}",
-                })
+                drafts.append({"contact_id": contact_id, "blocked_reason": f"draft error: {e}"})
 
         return {"drafts": drafts}
 

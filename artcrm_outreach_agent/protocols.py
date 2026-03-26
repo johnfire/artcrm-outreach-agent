@@ -26,6 +26,16 @@ class ReadyContactFetcher(Protocol):
     def __call__(self, limit: int = 20) -> list[dict]: ...
 
 
+class InteractionFetcher(Protocol):
+    """Fetch all logged interactions for a contact, newest first."""
+    def __call__(self, contact_id: int) -> list[dict]: ...
+
+
+class PageFetcher(Protocol):
+    """Fetch plain text content of a URL. Returns empty string on failure."""
+    def __call__(self, url: str) -> str: ...
+
+
 class ComplianceChecker(Protocol):
     """
     Check whether a contact can be emailed.
