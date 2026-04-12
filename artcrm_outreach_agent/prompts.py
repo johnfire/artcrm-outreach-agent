@@ -18,12 +18,19 @@ def draft_email_prompt(
     language: str,
     interactions: list[dict],
     website_content: str,
+    learnings: list[str] | None = None,
 ) -> tuple[str, str]:
     opt_out = OPT_OUT_LINE.get(language, OPT_OUT_LINE["en"])
 
+    learnings_section = ""
+    if learnings:
+        items = "\n".join(f"- {l}" for l in learnings)
+        learnings_section = f"\nRecent learnings from past outreach (apply these patterns):\n{items}\n"
+
     system = (
         f"You are {mission.identity}.\n"
-        f"Outreach style: {mission.outreach_style}\n\n"
+        f"Outreach style: {mission.outreach_style}"
+        f"{learnings_section}\n\n"
         f"You are about to write a first-contact email to a potential venue. "
         f"Before writing, read everything provided — the contact details, research notes, "
         f"scout reasoning, previous interactions, and the venue's website content. "
