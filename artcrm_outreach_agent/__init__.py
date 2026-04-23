@@ -1,7 +1,7 @@
 from .graph import create_outreach_agent
 from .protocols import (
-    AgentMission, LanguageModel, ReadyContactFetcher,
-    ComplianceChecker, ApprovalQueuer, RunStarter, RunFinisher,
+    AgentMission, LanguageModel, ReadyContactFetcher, InteractionFetcher,
+    PageFetcher, ComplianceChecker, ApprovalQueuer, RunStarter, RunFinisher,
 )
 from .state import OutreachState
 
@@ -10,6 +10,8 @@ __all__ = [
     "AgentMission",
     "LanguageModel",
     "ReadyContactFetcher",
+    "InteractionFetcher",
+    "PageFetcher",
     "ComplianceChecker",
     "ApprovalQueuer",
     "RunStarter",

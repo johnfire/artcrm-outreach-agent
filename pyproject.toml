@@ -2,9 +2,8 @@
 name = "artcrm-outreach-agent"
 version = "0.1.0"
 requires-python = ">=3.11"
-description = "LangGraph agent that drafts first-contact emails and queues them for human approval."
+description = "Outreach agent that drafts first-contact emails and queues them for human approval."
 dependencies = [
-    "langgraph>=0.2.0",
     "langchain-core>=0.3.0",
 ]
 
@@ -22,3 +21,8 @@ packages = ["artcrm_outreach_agent"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
