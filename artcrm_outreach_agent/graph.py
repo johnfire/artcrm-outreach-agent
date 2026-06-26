@@ -89,7 +89,8 @@ class _OutreachAgent:
 
             try:
                 interactions = self._fetch_interactions(contact_id)
-            except Exception:
+            except Exception as exc:
+                logger.warning("outreach: fetch_interactions failed for contact %s: %s", contact_id, exc)
                 interactions = []
 
             website_content = ""
@@ -97,8 +98,8 @@ class _OutreachAgent:
             if website:
                 try:
                     website_content = self._fetch_page(website)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("outreach: fetch_page failed for %s: %s", website, exc)
 
             language = contact.get("preferred_language") or self._mission.language_default
             system, user = draft_email_prompt(
@@ -135,7 +136,8 @@ class _OutreachAgent:
                     body=draft["body"],
                 )
                 queued += 1
-            except Exception:
+            except Exception as exc:
+                logger.warning("outreach: queue_for_approval failed for contact %s: %s", draft["contact_id"], exc)
                 blocked += 1
         return queued, blocked
 
